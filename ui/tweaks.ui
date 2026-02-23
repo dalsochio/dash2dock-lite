@@ -286,19 +286,6 @@
             </child>
           </object>
         </child>
-        <child>
-          <object class="AdwActionRow">
-            <property name="title" translatable="yes">Isolation Mode</property>
-            <property name="subtitle" translatable="yes">Hide running app icons and indicators from other workspaces or monitors. Favorites always remain visible. Monitor isolation requires dock on all monitors.</property>
-            <property name="activatable-widget">isolation-mode</property>
-            <child>
-              <object class="GtkDropDown" id="isolation-mode">
-                <property name="valign">center</property>
-                <property name="model">isolation-mode-model</property>
-              </object>
-            </child>
-          </object>
-        </child>
       </object>
     </child>
   </object>
@@ -337,14 +324,7 @@
       <item translatable="yes">Whenever applicable</item>
     </items>
   </object>
-  <object class="GtkStringList" id="isolation-mode-model">
-    <items>
-      <item translatable="yes">Off</item>
-      <item translatable="yes">Isolate Workspaces</item>
-      <item translatable="yes">Isolate Monitors</item>
-      <item translatable="yes">Isolate Both</item>
-    </items>
-  </object>
+
   <object class="GtkAdjustment" id="scroll-sensitivity-adjust">
     <property name="lower">0.0</property>
     <property name="upper">1.0</property>
