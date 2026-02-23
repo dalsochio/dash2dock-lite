@@ -551,19 +551,31 @@ export let Dock = GObject.registerClass(
 
           let app = c._appwell.app;
           let appId = app ? app.get_id() : '';
+          let isFavorite =
+            this._favorite_ids && this._favorite_ids.includes(appId);
 
           // hide icons if favorites only
-          if (
-            !c.custom_icon &&
-            this._favorite_ids &&
-            !this._favorite_ids.includes(appId)
-          ) {
+          if (!c.custom_icon && !isFavorite) {
             if (this.extension.favorites_only) {
               c._appwell.visible = false;
               c.width = -1;
               c.height = -1;
               return false;
-            } else if (!c._found) {
+            }
+
+            // hide non-favorite running apps outside current workspace/monitor
+            let isolationMode = this.extension.isolation_mode || 0;
+            if (isolationMode > 0 && app) {
+              let visibleWindows = this.getAppWindowsFiltered(app);
+              if (visibleWindows.length === 0) {
+                c._appwell.visible = false;
+                c.width = -1;
+                c.height = -1;
+                return false;
+              }
+            }
+
+            if (!c._found) {
               c._found = true;
             }
           }
@@ -1419,6 +1431,26 @@ export let Dock = GObject.registerClass(
     }
 
     getAppWindowsFiltered(app) {
+      let windows = app.get_windows();
+
+      // --- isolation mode filtering (hides icons + indicators) ---
+      let isolationMode = this.extension.isolation_mode || 0;
+      // 1 = workspace, 2 = monitor, 3 = both
+      let isolateWorkspace = isolationMode === 1 || isolationMode === 3;
+      let isolateMonitor = isolationMode === 2 || isolationMode === 3;
+
+      if (isolateWorkspace) {
+        let activeWs = global.workspace_manager.get_active_workspace();
+        windows = windows.filter((w) => w.get_workspace() === activeWs);
+      }
+
+      if (isolateMonitor && Main.layoutManager.monitors.length > 1) {
+        windows = windows.filter(
+          (w) => w.get_monitor() === this._monitor.index
+        );
+      }
+
+      // --- multi-monitor-filter (click/scroll action filtering only) ---
       var apply_filtering = this.extension.multi_monitor_filter != 0;
 
       // no filtering needed for a single dock
@@ -1437,7 +1469,7 @@ export let Dock = GObject.registerClass(
         var on_current_monitor = false;
         var on_other_monitor = false;
 
-        app.get_windows().forEach((w) => {
+        windows.forEach((w) => {
           on_current_monitor =
             on_current_monitor || w.get_monitor() == this._monitor.index;
           on_other_monitor =
@@ -1450,11 +1482,11 @@ export let Dock = GObject.registerClass(
       }
 
       if (apply_filtering) {
-        return app.get_windows().filter((w) => {
+        return windows.filter((w) => {
           return w.get_monitor() == this._monitor.index;
         });
       }
-      return app.get_windows();
+      return windows;
     }
 
     _onScrollEvent(obj, evt) {
