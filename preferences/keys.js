@@ -461,6 +461,10 @@ export const SettingsKeys = () => {
       widget_type: 'dropdown',
       test: { pointer: 'slide-through', values: [0, 1, 2] },
     },
+    'isolation-mode': {
+      default_value: 0,
+      widget_type: 'dropdown',
+    },
     'overview-transparent-background': {
       default_value: false,
       widget_type: 'switch',

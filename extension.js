@@ -572,6 +572,9 @@ export default class Dash2DockLiteExt extends Extension {
         case 'multi-monitor-preference':
           this._updateMultiMonitorPreference();
           break;
+        case 'isolation-mode':
+          this._onAppsChanged();
+          break;
         case 'icon-size':
         case 'preferred-monitor': {
           this._updateLayout();
@@ -697,6 +700,17 @@ export default class Dash2DockLiteExt extends Extension {
       this
     );
 
+    this._workspaceManager = global.workspace_manager;
+    this._workspaceManager.connectObject(
+      'active-workspace-changed',
+      () => {
+        if (this.isolation_mode > 0) {
+          this._onAppsChanged();
+        }
+      },
+      this
+    );
+
     Main.sessionMode.connectObject(
       'updated',
       this._onSessionUpdated.bind(this),
@@ -758,6 +772,18 @@ export default class Dash2DockLiteExt extends Extension {
       this._onFullScreen.bind(this),
       'restacked',
       this._onRestacked.bind(this),
+      'window-entered-monitor',
+      () => {
+        if (this.isolation_mode > 0) {
+          this._onAppsChanged();
+        }
+      },
+      'window-left-monitor',
+      () => {
+        if (this.isolation_mode > 0) {
+          this._onAppsChanged();
+        }
+      },
       this
     );
 
@@ -800,6 +826,7 @@ export default class Dash2DockLiteExt extends Extension {
   _removeEvents() {
     this._appSystem.disconnectObject(this);
     this._appFavorites.disconnectObject(this);
+    this._workspaceManager?.disconnectObject(this);
     Main.extensionManager.disconnectObject(this);
     Main.messageTray.disconnectObject(this);
     Main.overview.disconnectObject(this);
