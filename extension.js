@@ -772,6 +772,12 @@ export default class Dash2DockLiteExt extends Extension {
       this._onFullScreen.bind(this),
       'restacked',
       this._onRestacked.bind(this),
+      'window-entered-monitor',
+      () => {
+        if (this.isolation_mode >= 2) {
+          this._onAppsChanged();
+        }
+      },
       this
     );
 
