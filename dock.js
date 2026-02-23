@@ -246,19 +246,22 @@ export let Dock = GObject.registerClass(
     }
 
     _onFocusWindow(evt) {
-      // this._debouncedBeginAnimation();
+      if (this.extension.isolation_mode > 0) {
+        this._icons = null;
+      }
       this._beginAnimation();
       this.autohider._debounceCheckHide();
       return Clutter.EVENT_PROPAGATE;
     }
     _onFullScreen() {
-      // this._debouncedBeginAnimation();
       this._beginAnimation();
       this.autohider._debounceCheckHide();
       return Clutter.EVENT_PROPAGATE;
     }
     _onRestacked() {
-      // this._debouncedBeginAnimation();
+      if (this.extension.isolation_mode > 0) {
+        this._icons = null;
+      }
       this._beginAnimation();
       this.autohider._debounceCheckHide();
       return Clutter.EVENT_PROPAGATE;
