@@ -675,7 +675,13 @@ export let Dock = GObject.registerClass(
       }
 
       // hide separator between running apps and favorites - if not needed
-      if (this.extension.favorites_only) {
+      let hasVisibleRunningApps = this._icons.some((icon) => {
+        if (!icon._appwell?.app) return false;
+        let appId = icon._appwell.app.get_id();
+        return !this._favorite_ids?.includes(appId);
+      });
+
+      if (this.extension.favorites_only || !hasVisibleRunningApps) {
         if (this._separators.length) {
           this._separators[0].visible = false;
           this._separators = [];
@@ -767,10 +773,26 @@ export let Dock = GObject.registerClass(
           c._appwell._activate = c._appwell.activate;
           c._appwell.activate = () => {
             try {
+              let app = c._appwell.app;
+              let isolationMode = this.extension.isolation_mode || 0;
+
+              // when isolation is active and the app has no windows in the
+              // current context, open a new instance instead of focusing a
+              // window on another workspace/monitor
+              if (isolationMode > 0 && app) {
+                let filtered = this.getAppWindowsFiltered(app);
+                let allWindows = app.get_windows();
+                if (filtered.length === 0 && allWindows.length > 0) {
+                  app.open_new_window(-1);
+                  this._maybeBounce(c);
+                  return;
+                }
+              }
+
               if (!c._menu) {
                 this._maybeBounce(c);
               }
-              this._maybeMinimizeOrMaximize(c._appwell.app);
+              this._maybeMinimizeOrMaximize(app);
               c._appwell._activate();
             } catch (err) {
               // happens with dummy DashIcons
